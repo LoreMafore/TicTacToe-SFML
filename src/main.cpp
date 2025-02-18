@@ -56,23 +56,43 @@ int bot_move(std::vector<int> array, int player)
     }
 
 }
+class button_Maker
+        {
+            public:
+            //v2f size;
+            sf::RectangleShape rect;
 
-int button(v2f size, v2i mouse, sf::RectangleShape rect)
-{
+            //constructor
+            button_Maker(const v2f& button_size) : rect(button_size)
+            {
+                rect.setFillColor(sf::Color::White);
+                rect.setOutlineThickness(1);
+                rect.setOutlineColor(sf::Color::Transparent);
+            }
 
-    v2f ul = v2f(rect.getPosition());
-    v2f bl = v2f(rect.getPosition() + v2f(0, size.y));
-    v2f ur = v2f(rect.getPosition() + v2f(size.x,0));
-    v2f br = v2f(rect.getPosition() + v2f(size.x, size.y));
+            void bM_draw(sf::RenderTarget& target) const
+            {
+                target.draw(rect);
+            }
 
+            void set_button_style(const sf::Color& color, f32 thickness, const sf::Color& outline_color)
+            {
+                rect.setFillColor(color);
+                rect.setOutlineThickness(thickness);
+                rect.setOutlineColor(outline_color);
+            }
 
-    if( mouse.x >= ul.x && mouse.x <= br.x && mouse.y >= ul.y && mouse.y <= br.y)
-    {
-        printf("gay");
-    }
-    return 0;
-}
+            int mouse_On_Button_rect_change(const v2i mouse_pos, const sf::Color& color, f32 thickness, const sf::Color& outline_color)
+            {
+                if(rect.getLocalBounds().contains(static_cast<v2f>(mouse_pos)))
+                {
+                    rect.setFillColor(color);
+                    rect.setOutlineThickness(thickness);
+                    rect.setOutlineColor(outline_color);
+                }
+            }
 
+        };
 
 int main()
 {
@@ -106,8 +126,8 @@ int main()
     x_piece_sprite.setScale(v2f(.1, .1));
     button_1_sprite.setScale(v2f(.1, .1));
     button_2_sprite.setScale(v2f(.1, .1));
-    button_1.setFillColor(sf::Color(192,192,192));
-    button_2.setFillColor(sf::Color(192,192,192));
+    button_1.setFillColor(sf::Color(160,160,160));
+    button_2.setFillColor(sf::Color(160,160,160));
 
     background_sprite.setPosition(v2f(0,0));
     board_sprite.setPosition(v2f(360,190));
@@ -115,11 +135,17 @@ int main()
     button_1.setPosition(v2f(300, 290));
     button_2.setPosition(v2f(585, 290));
 
-    //v2i mouse_pos = sf::Mouse::getPosition(window);
-    v2f mouse = v2f(sf::Mouse::getPosition(window));
+    v2i mouse_pos = sf::Mouse::getPosition(window);
+    //v2f mouse = v2f(sf::Mouse::getPosition(window));
 
-    v2f ul = v2f(button_1.getPosition());
-    v2f br = v2f(button_1.getPosition() + v2f(rect.size.x, rect.size.y));
+//    v2f ul = v2f(button_1.getPosition());
+//    v2f br = v2f(button_1.getPosition() + v2f(rect.size.x, rect.size.y));
+
+    button_Maker cool(v2f(100, 100));
+    cool.rect.setPosition(v2f(100,100));
+
+    cool.set_button_style(sf::Color(192,192,192), 1, sf::Color::Transparent);
+
 
     bool picked_character = false;
     int board[9] {0};
@@ -130,6 +156,7 @@ int main()
         {
             window.clear();
             window.draw(background_sprite);
+            cool.bM_draw(window);
             window.draw(button_1);
             window.draw(button_2);
             window.display();
@@ -143,11 +170,17 @@ int main()
             window.draw(x_piece_sprite);
             window.display();
         }
+        mouse_pos = sf::Mouse::getPosition(window);
         while (const std::optional event = window.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
             {
                 window.close();
+            }
+
+            if(event->is<sf::Event::MouseMoved>())
+            {
+                cool.mouse_On_Button_rect_change(mouse_pos,sf::Color(160,160,160), 1, sf::Color::Transparent);
             }
 
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape))
@@ -163,16 +196,21 @@ int main()
 
             }
         }
-        //mouse_pos = sf::Mouse::getPosition();
 
-        mouse = v2f(sf::Mouse::getPosition());
+
+        //mouse_pos = v2f(sf::Mouse::getPosition(window));
 
         //print, mouse pos, ur, bl, button1 pos
-        //printf("")
-        if( mouse.x >= ul.x && mouse.x <= br.x && mouse.y >= ul.y && mouse.y <= br.y)
-        {
-            printf("gay");
-        }
+
+//        if(button_1.getGlobalBounds().contains(static_cast<v2f>(mouse_pos)))
+//        {
+//            printf("Really gay\n\n\n");
+//        }
+
+//        if( mouse.x >= ul.x && mouse.x <= br.x && mouse.y >= ul.y && mouse.y <= br.y)
+//        {
+//            printf("\n\n\n\n\ngay\n\n\n\n");
+//        }
 //        button(button_1.getPosition(), mouse_pos, button_1);
 
 
