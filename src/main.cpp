@@ -56,6 +56,9 @@ int bot_move(std::vector<int> array, int player)
     }
 
 }
+
+
+
 class button_Maker
         {
             public:
@@ -154,6 +157,20 @@ class button_Maker
 
         };
 
+
+class sprite_maker
+{
+    public:
+    sf::Texture texture;
+    sf::Sprite sprite;
+
+    sprite_maker(const std::string& file_path, const v2f& sprite_scale, const v2f& sprite_pos): texture(file_path),sprite(texture)
+    {
+        sprite.setScale(sprite_scale);
+        sprite.setPosition(sprite_pos);
+    }
+};
+
 int main()
 {
     auto window = sf::RenderWindow(sf::VideoMode({920u, 580u}), "CMake SFML Project");
@@ -164,19 +181,31 @@ int main()
     sf::Texture x_texture;
     sf::Texture o_texture;
 
+    std::vector<sf::Sprite> x_list;
+    std::vector<sf::Sprite> o_list;
     background_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/background.png");
     board_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/board_processed.png");
     x_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/head.png");
     o_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/bee.png");
 
-    sf::Sprite background_sprite(background_texture);
+    //sf::Sprite background_sprite(background_texture);
     sf::Sprite board_sprite(board_texture);
     sf::Sprite x_piece_sprite(x_texture);
     sf::Sprite o_piece_sprite(o_texture);
 
-    x_piece_sprite.setScale(v2f(.1, .1));
+    int counter = 100;
 
-    background_sprite.setPosition(v2f(0,0));
+    sprite_maker background_sprite("C:/Users/momer/Umary/CSC204/MidTerm/assets/background.png", v2f(1,1),v2f(0,0));
+    for (int i = 0; i < 5; i++)
+    {
+        counter += 100;
+        sprite_maker x_sprite("C:/Users/momer/Umary/CSC204/MidTerm/assets/head.png", v2f(.1,.1),v2f(counter,100));
+        x_list.push_back(x_sprite.sprite);
+    }
+    x_piece_sprite.setScale(v2f(.1, .1));
+    //background_sprite.setScale(v2f(1,1));
+
+    //background_sprite.setPosition(v2f(0,0));
     board_sprite.setPosition(v2f(360,190));
     x_piece_sprite.setPosition(v2f(1000,1000));
 
@@ -203,8 +232,6 @@ int main()
 
     bool picked_character = false;
 
-    std::vector<sf::Sprite> x_list;
-    std::vector<sf::Sprite> o_list;
     std::vector<sf::RectangleShape> button_list;
     button_list.push_back(top_left.rect);
     button_list.push_back(top_middle.rect);
@@ -216,7 +243,8 @@ int main()
         if (picked_character == false)
         {
             window.clear();
-            window.draw(background_sprite);
+            window.draw(background_sprite.sprite);
+            //window.draw(background_sprite);
             top_left.bM_draw(window);
             top_middle.bM_draw(window);
             top_right.bM_draw(window);
@@ -227,7 +255,7 @@ int main()
         else
         {
             window.clear();
-            window.draw(background_sprite);
+            //window.draw(background_sprite.sprite);
             window.draw(board_sprite);
             window.draw(x_piece_sprite);
             window.display();
