@@ -61,12 +61,13 @@ class button_Maker
             public:
             sf::RectangleShape rect;
             sf::CircleShape circ;
-            bool OG_Color;
+            bool filled;
 
 
             //constructor
-            button_Maker( const v2f& button_size, const bool& color, float circle_size) : rect(button_size), OG_Color(color), circ(circle_size)
+            button_Maker( const v2f& button_size,  float circle_size) : rect(button_size), circ(circle_size)
             {
+                filled = false;
                 rect.setFillColor(sf::Color::White);
                 rect.setOutlineThickness(1);
                 rect.setOutlineColor(sf::Color::Transparent);
@@ -74,6 +75,12 @@ class button_Maker
                 circ.setFillColor(sf::Color::Black);
                 circ.setOutlineThickness(1);
                 circ.setOutlineColor(sf::Color::Transparent);
+            }
+
+            void circ_pos(const sf::RectangleShape& rectangle, sf::CircleShape circle)
+            {
+                circle.setOrigin(v2f(circle.getRadius(),circle.getRadius()));
+                circle.setPosition(v2f(rectangle.getPosition().x + rectangle.getSize().x/2, rectangle.getPosition().y + rectangle.getSize().y/2));
             }
 
             void bM_draw(sf::RenderTarget& target) const
@@ -95,7 +102,6 @@ class button_Maker
                 ///this could be optimized
                 if(rect.getGlobalBounds().contains(static_cast<v2f>(mouse_pos)))
                 {
-
                     rect.setFillColor(color);
                     rect.setOutlineThickness(thickness);
                     rect.setOutlineColor(outline_color);
@@ -114,13 +120,18 @@ class button_Maker
             int mouse_on_button_circ_change(const v2i mouse_pos, const sf::Color& color, f32 thickness, const sf::Color& outline_color,
                                             const sf::Color& OG_color, f32 OG_thickness, const sf::Color& OG_outline_color)
             {
-                if(rect.getGlobalBounds().contains(static_cast<v2f>(mouse_pos)))
+                if(rect.getGlobalBounds().contains(static_cast<v2f>(mouse_pos)) && !filled)
                 {
 
                     circ.setFillColor(color);
                     circ.setOutlineThickness(thickness);
                     circ.setOutlineColor(outline_color);
 
+                }
+
+                else if(filled == true)
+                {
+                    printf("die");
                 }
 
                 else
@@ -170,18 +181,34 @@ int main()
     x_piece_sprite.setPosition(v2f(1000,1000));
 
     v2i mouse_pos = sf::Mouse::getPosition(window);
-    button_Maker top_left(v2f(100, 100), true, 7.5);
-    button_Maker top_middle(v2f(100, 100), true, 7.5);
+    button_Maker top_left(v2f(100, 100),  7.5);
+    button_Maker top_middle(v2f(100, 100), 7.5);
+    button_Maker top_right(v2f(100, 100),  7.5);
+
     top_left.rect.setPosition(v2f(310,160));
+    //top_left.circ_pos(top_left.rect,top_left.circ);
     top_left.circ.setOrigin(v2f(top_left.circ.getRadius(),top_left.circ.getRadius()));
     top_left.circ.setPosition(v2f(top_left.rect.getPosition().x + top_left.rect.getSize().x/2, top_left.rect.getPosition().y + top_left.rect.getSize().y/2));
     top_left.set_button_style(sf::Color(192,192,192), 1, sf::Color::Black);
 
-    top_middle.rect.setPosition(v2f(410,160));
+    top_middle.rect.setPosition(v2f(415,160));
     top_middle.circ.setOrigin(v2f(top_middle.circ.getRadius(),top_middle.circ.getRadius()));
     top_middle.circ.setPosition(v2f(top_middle.rect.getPosition().x + top_middle.rect.getSize().x/2, top_middle.rect.getPosition().y + top_middle.rect.getSize().y/2));
     top_middle.set_button_style(sf::Color(192,192,192), 1, sf::Color::White);
+
+    top_right.rect.setPosition(v2f(520,160));
+    top_right.circ.setOrigin(v2f(top_right.circ.getRadius(),top_right.circ.getRadius()));
+    top_right.circ.setPosition(v2f(top_right.rect.getPosition().x + top_right.rect.getSize().x/2, top_right.rect.getPosition().y + top_right.rect.getSize().y/2));
+    top_right.set_button_style(sf::Color(192,192,192), 1, sf::Color::Black);
+
     bool picked_character = false;
+
+    std::vector<sf::Sprite> x_list;
+    std::vector<sf::Sprite> o_list;
+    std::vector<sf::RectangleShape> button_list;
+    button_list.push_back(top_left.rect);
+    button_list.push_back(top_middle.rect);
+    button_list.push_back(top_right.rect);
     int board[9] {0};
 
     while (window.isOpen())
@@ -192,6 +219,8 @@ int main()
             window.draw(background_sprite);
             top_left.bM_draw(window);
             top_middle.bM_draw(window);
+            top_right.bM_draw(window);
+            window.draw(x_piece_sprite);
             window.display();
         }
 
@@ -217,13 +246,27 @@ int main()
 
             if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
             {
-//                x_piece_sprite.setPosition(v2f(static_cast<float>(mouse_pos.x),static_cast<float>(mouse_pos.y)));
-//                window.draw(x_piece_sprite)
-
+                for(int position = 0; position < button_list.size(); position++)
+                {
+                    if(button_list[position].getGlobalBounds().contains(static_cast<v2f>(mouse_pos)) )
+                    {
+                        if(board[position] == 0)
+                        {
+                            board[position] = 1;
+                            x_piece_sprite.setPosition(v2f(static_cast<float>(mouse_pos.x),static_cast<float>(mouse_pos.y)));
+                            window.draw(x_piece_sprite);
+                            printf("\n position: %d, value: %d", position, board[position]);
+                        }
+                    }
+                }
 
             }
         }
 
+//        if(top_middle.filled == false)
+//        {
+//            printf("false");
+//        }
 
 //        if(button_1.getGlobalBounds().contains(static_cast<v2f>(mouse_pos)))
 //        {
@@ -240,5 +283,7 @@ int main()
 
             top_middle.mouse_on_button_circ_change(mouse_pos, sf::Color::White, 2.5, sf::Color::White,
                                              sf::Color::Transparent, 2.5, sf::Color::White);
+            top_right.mouse_on_button_circ_change(mouse_pos, sf::Color::White, 2.5, sf::Color::White,
+                                               sf::Color::Transparent, 2.5, sf::Color::White);
     }
 }
