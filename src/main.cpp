@@ -166,48 +166,95 @@ class sprite_maker
 
     sprite_maker(const std::string& file_path, const v2f& sprite_scale, const v2f& sprite_pos): texture(file_path),sprite(texture)
     {
+        if(!texture.loadFromFile(file_path))
+        {
+            throw std::runtime_error("Failed to load from: " + file_path);
+        }
+        sprite.setTexture(texture);
         sprite.setScale(sprite_scale);
         sprite.setPosition(sprite_pos);
     }
+
 };
+
+enum x_or_y
+{
+    X,
+    Y
+};
+bool players_move(x_or_y player, std::vector<std::reference_wrapper<sf::Sprite>> x_sprites, std::vector<std::reference_wrapper<sf::Sprite>> y_sprites,
+                 int (&array)[9], bool players_turn, std::vector<button_Maker> buttons, const v2i mouse_pos, sf::RenderWindow& window, int counter)
+{
+
+        auto& chosen_piece = (player == x_or_y::X)? x_sprites : y_sprites;
+        int  chosen_array_piece = (player == x_or_y::X) ? 1 : 2;
+        for (int i = 0; i < buttons.size(); i++)
+            if (buttons[i].mouse_On_Button(mouse_pos) && even&&sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+                printf("Help");
+                if (array[i] == 0) {
+                    array[i] = chosen_array_piece;
+                    chosen_piece[counter].get().setPosition(
+                            v2f(buttons[i].rect.getPosition().x / 2, buttons[i].rect.getPosition().y / 2));
+                    counter++;
+                    players_turn = false;
+                    return true;
+                }
+            }
+    }
+
+
+    return false;
+
+}
+
 
 int main()
 {
     auto window = sf::RenderWindow(sf::VideoMode({920u, 580u}), "CMake SFML Project");
     window.setFramerateLimit(144);
 
-    sf::Texture background_texture;
-    sf::Texture board_texture;
     sf::Texture x_texture;
     sf::Texture o_texture;
-
-    std::vector<sf::Sprite> x_list;
-    std::vector<sf::Sprite> o_list;
-    background_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/background.png");
-    board_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/board_processed.png");
+    sf::Texture back_ground_texture;
+    back_ground_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/background.png");
     x_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/head.png");
     o_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/bee.png");
-
-    //sf::Sprite background_sprite(background_texture);
-    sf::Sprite board_sprite(board_texture);
-    sf::Sprite x_piece_sprite(x_texture);
+    sf::Sprite x_piece_sprite (x_texture);
+    sf::Sprite x_piece_sprite1(x_texture);
+    sf::Sprite x_piece_sprite2(x_texture);
+    sf::Sprite x_piece_sprite3(x_texture);
+    sf::Sprite x_piece_sprite4(x_texture);
     sf::Sprite o_piece_sprite(o_texture);
+    sf::Sprite o_piece_sprite1(o_texture);
+    sf::Sprite o_piece_sprite2(o_texture);
+    sf::Sprite o_piece_sprite3(o_texture);
+    sf::Sprite o_piece_sprite4(o_texture);
 
-    int counter = 100;
+
 
     sprite_maker background_sprite("C:/Users/momer/Umary/CSC204/MidTerm/assets/background.png", v2f(1,1),v2f(0,0));
-    for (int i = 0; i < 5; i++)
-    {
-        counter += 100;
-        sprite_maker x_sprite("C:/Users/momer/Umary/CSC204/MidTerm/assets/head.png", v2f(.1,.1),v2f(counter,100));
-        x_list.push_back(x_sprite.sprite);
-    }
     x_piece_sprite.setScale(v2f(.1, .1));
-    //background_sprite.setScale(v2f(1,1));
+    x_piece_sprite1.setScale(v2f(.1,.1));
+    x_piece_sprite2.setScale(v2f(.1,.1));
+    x_piece_sprite3.setScale(v2f(.1,.1));
+    x_piece_sprite4.setScale(v2f(.1,.1));
+    o_piece_sprite.setScale(v2f(.1, .1));
+    o_piece_sprite1.setScale(v2f(.1,.1));
+    o_piece_sprite2.setScale(v2f(.1,.1));
+    o_piece_sprite3.setScale(v2f(.1,.1));
+    o_piece_sprite4.setScale(v2f(.1,.1));
 
-    //background_sprite.setPosition(v2f(0,0));
-    board_sprite.setPosition(v2f(360,190));
     x_piece_sprite.setPosition(v2f(1000,1000));
+    x_piece_sprite1.setPosition(v2f(1000,1000));
+    x_piece_sprite2.setPosition(v2f(1000,1000));
+    x_piece_sprite3.setPosition(v2f(1000,1000));
+    x_piece_sprite4.setPosition(v2f(1000,1000));
+
+    o_piece_sprite.setPosition(v2f(1000,1000));
+    o_piece_sprite1.setPosition(v2f(1000,1000));
+    o_piece_sprite2.setPosition(v2f(1000,1000));
+    o_piece_sprite3.setPosition(v2f(1000,1000));
+    o_piece_sprite4.setPosition(v2f(1000,1000));
 
     v2i mouse_pos = sf::Mouse::getPosition(window);
     button_Maker top_left(v2f(100, 100),  7.5);
@@ -231,11 +278,32 @@ int main()
     top_right.set_button_style(sf::Color(192,192,192), 1, sf::Color::Black);
 
     bool picked_character = false;
+    bool players_turn = true;
+    int counter =0;
 
-    std::vector<sf::RectangleShape> button_list;
-    button_list.push_back(top_left.rect);
-    button_list.push_back(top_middle.rect);
-    button_list.push_back(top_right.rect);
+    std::vector<button_Maker> button_list;
+    button_list.push_back(top_left);
+    button_list.push_back(top_middle);
+    button_list.push_back(top_right);
+
+    std::vector<sf::RectangleShape> button_list_rect;
+    button_list_rect.push_back(top_left.rect);
+    button_list_rect.push_back(top_middle.rect);
+    button_list_rect.push_back(top_right.rect);
+    std::vector<std::reference_wrapper<sf::Sprite>> x_list;
+    x_list.emplace_back(x_piece_sprite);
+    x_list.emplace_back(x_piece_sprite1);
+    x_list.emplace_back(x_piece_sprite2);
+    x_list.emplace_back(x_piece_sprite3);
+    x_list.emplace_back(x_piece_sprite4);
+
+    std::vector<std::reference_wrapper<sf::Sprite>> o_list;
+    o_list.emplace_back(o_piece_sprite);
+    o_list.emplace_back(o_piece_sprite1);
+    o_list.emplace_back(o_piece_sprite2);
+    o_list.emplace_back(o_piece_sprite3);
+    o_list.emplace_back(o_piece_sprite4);
+
     int board[9] {0};
 
     while (window.isOpen())
@@ -244,7 +312,12 @@ int main()
         {
             window.clear();
             window.draw(background_sprite.sprite);
-            //window.draw(background_sprite);
+            for(int i = 0; i < x_list.size(); i++)
+            {
+                window.draw(x_list[i]);
+                window.draw(o_list[i]);
+            }
+
             top_left.bM_draw(window);
             top_middle.bM_draw(window);
             top_right.bM_draw(window);
@@ -256,7 +329,6 @@ int main()
         {
             window.clear();
             //window.draw(background_sprite.sprite);
-            window.draw(board_sprite);
             window.draw(x_piece_sprite);
             window.display();
         }
@@ -272,46 +344,45 @@ int main()
                 window.close();
             }
 
-            if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-            {
-                for(int position = 0; position < button_list.size(); position++)
-                {
-                    if(button_list[position].getGlobalBounds().contains(static_cast<v2f>(mouse_pos)) )
-                    {
-                        if(board[position] == 0)
-                        {
-                            board[position] = 1;
-                            x_piece_sprite.setPosition(v2f(static_cast<float>(mouse_pos.x),static_cast<float>(mouse_pos.y)));
-                            window.draw(x_piece_sprite);
-                            printf("\n position: %d, value: %d", position, board[position]);
-                        }
-                    }
-                }
-
-            }
+//            if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+//            {
+//                for(int position = 0; position < button_list_rect.size(); position++)
+//                {
+//                    if(button_list_rect[position].getGlobalBounds().contains(static_cast<v2f>(mouse_pos)) )
+//                    {
+//                        if(board[position] == 0)
+//                        {
+//                            board[position] = 1;
+//                            x_piece_sprite.setPosition(v2f(static_cast<float>(mouse_pos.x),static_cast<float>(mouse_pos.y)));
+//                            window.draw(x_piece_sprite);
+//                        }
+//                    }
+//                }
+//
+//            }
         }
 
-//        if(top_middle.filled == false)
-//        {
-//            printf("false");
-//        }
-
-//        if(button_1.getGlobalBounds().contains(static_cast<v2f>(mouse_pos)))
-//        {
-//            printf("Really gay\n\n\n");
-//        }
-
-            //top_left.mouse_On_Button(mouse_pos);
             mouse_pos = sf::Mouse::getPosition(window);
-           // top_left.mouse_on_button_rect_change(mouse_pos,sf::Color(160,160,160), 1, sf::Color::Transparent,
-            //                                 sf::Color(192,192,192), 1, sf::Color::Transparent);
+
 
             top_left.mouse_on_button_circ_change(mouse_pos, sf::Color::White, 2.5, sf::Color::White,
-                                                        sf::Color::Transparent, 2.5, sf::Color::White);
+                                                 sf::Color::Transparent, 2.5, sf::Color::White);
+            top_left.bM_draw(window);
 
             top_middle.mouse_on_button_circ_change(mouse_pos, sf::Color::White, 2.5, sf::Color::White,
-                                             sf::Color::Transparent, 2.5, sf::Color::White);
+                                                   sf::Color::Transparent, 2.5, sf::Color::White);
+            top_middle.bM_draw(window);
+
             top_right.mouse_on_button_circ_change(mouse_pos, sf::Color::White, 2.5, sf::Color::White,
-                                               sf::Color::Transparent, 2.5, sf::Color::White);
+                                                  sf::Color::Transparent, 2.5, sf::Color::White);
+
+//            window.clear();
+//            for(auto i: button_list)
+//            {
+//                i.bM_draw(window);
+//            }
+            //window.display();
+            //inside the player function we need to have the  mouse_pos update
+            players_move(x_or_y::X, x_list, o_list, board, players_turn, button_list, mouse_pos,window, counter);
     }
 }
