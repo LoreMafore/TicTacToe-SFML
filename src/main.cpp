@@ -36,6 +36,7 @@ int win_condition(std::vector<int> array)
     }
 }
 
+///TODO Start working on bot_move
 int bot_move(std::vector<int> array, int player)
 {
     int win_pos[8][3]
@@ -56,8 +57,6 @@ int bot_move(std::vector<int> array, int player)
     }
 
 }
-
-
 
 class button_Maker
         {
@@ -148,15 +147,10 @@ class button_Maker
 
             int mouse_On_Button(const v2i mos_pos)
             {
-                if(rect.getGlobalBounds().contains(static_cast<v2f>(mos_pos)))
-                {
-                    printf("gay");
-                }
-                return 0;
+                return rect.getGlobalBounds().contains(static_cast<v2f>(mos_pos));
             }
 
         };
-
 
 class sprite_maker
 {
@@ -182,31 +176,39 @@ enum x_or_y
     X,
     Y
 };
-bool players_move(x_or_y player, std::vector<std::reference_wrapper<sf::Sprite>> x_sprites, std::vector<std::reference_wrapper<sf::Sprite>> y_sprites,
-                 int (&array)[9], bool players_turn, std::vector<button_Maker> buttons, const v2i mouse_pos, sf::RenderWindow& window, int counter)
-{
 
-        auto& chosen_piece = (player == x_or_y::X)? x_sprites : y_sprites;
-        int  chosen_array_piece = (player == x_or_y::X) ? 1 : 2;
-        for (int i = 0; i < buttons.size(); i++)
-            if (buttons[i].mouse_On_Button(mouse_pos) && even&&sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-                printf("Help");
-                if (array[i] == 0) {
-                    array[i] = chosen_array_piece;
-                    chosen_piece[counter].get().setPosition(
-                            v2f(buttons[i].rect.getPosition().x / 2, buttons[i].rect.getPosition().y / 2));
-                    counter++;
-                    players_turn = false;
-                    return true;
-                }
+bool players_move(x_or_y player, std::vector<sf::Sprite*> x_sprites, std::vector<sf::Sprite*> y_sprites,
+                  int (&array)[9], bool& players_turn, std::vector<button_Maker> buttons, const v2i mouse_pos, std::vector<sf::RectangleShape> button_rects,
+                  int& counter, sf::RenderWindow& window) {
+
+    auto &chosen_piece = (player == x_or_y::X) ? x_sprites : y_sprites;
+    int chosen_array_piece = (player == x_or_y::X) ? 1 : 2;
+    for (int i = 0; i < buttons.size(); i++) {
+
+        //printf("\n\n%d\n\n", array[i]);
+
+        if (buttons[i].mouse_On_Button(mouse_pos) && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
+            //printf("\narray[%d]: %d", i, array[i]);
+
+            if (array[i] == 0)
+            {
+
+                printf("\narray[%d]: %d", i, array[i]);
+                printf("\nbuttons_rect[%d]: %f , %F", i, button_rects[i].getPosition().x, button_rects[i].getPosition().y);
+                array[i] = chosen_array_piece;
+                chosen_piece[counter]->setPosition(v2f(buttons.at(i).circ.getPosition().x-15, buttons.at(i).circ.getPosition().y-15));
+                //chosen_piece[counter]->setPosition(v2f(buttons.at(i).circ.getPosition().x, button_rects.at(i).getPosition().y));
+
+                counter += 1;
+                players_turn = false;
+                return true;
             }
+
+        }
+
     }
-
-
     return false;
-
 }
-
 
 int main()
 {
@@ -219,85 +221,106 @@ int main()
     back_ground_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/background.png");
     x_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/head.png");
     o_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/bee.png");
-    sf::Sprite x_piece_sprite (x_texture);
-    sf::Sprite x_piece_sprite1(x_texture);
-    sf::Sprite x_piece_sprite2(x_texture);
-    sf::Sprite x_piece_sprite3(x_texture);
-    sf::Sprite x_piece_sprite4(x_texture);
-    sf::Sprite o_piece_sprite(o_texture);
-    sf::Sprite o_piece_sprite1(o_texture);
-    sf::Sprite o_piece_sprite2(o_texture);
-    sf::Sprite o_piece_sprite3(o_texture);
-    sf::Sprite o_piece_sprite4(o_texture);
+    sf::Sprite* x_piece_sprite = new sf::Sprite(x_texture);
+    sf::Sprite* x_piece_sprite1 = new sf::Sprite(x_texture);
+    sf::Sprite* x_piece_sprite2 = new sf::Sprite(x_texture);
+    sf::Sprite* x_piece_sprite3 = new sf::Sprite(x_texture);
+    sf::Sprite* x_piece_sprite4 = new sf::Sprite(x_texture);
+    sf::Sprite* o_piece_sprite = new sf::Sprite(o_texture);
+    sf::Sprite* o_piece_sprite1 = new sf::Sprite(o_texture);
+    sf::Sprite* o_piece_sprite2 = new sf::Sprite(o_texture);
+    sf::Sprite* o_piece_sprite3 = new sf::Sprite(o_texture);
+    sf::Sprite* o_piece_sprite4 = new sf::Sprite(o_texture);
 
 
 
     sprite_maker background_sprite("C:/Users/momer/Umary/CSC204/MidTerm/assets/background.png", v2f(1,1),v2f(0,0));
-    x_piece_sprite.setScale(v2f(.1, .1));
-    x_piece_sprite1.setScale(v2f(.1,.1));
-    x_piece_sprite2.setScale(v2f(.1,.1));
-    x_piece_sprite3.setScale(v2f(.1,.1));
-    x_piece_sprite4.setScale(v2f(.1,.1));
-    o_piece_sprite.setScale(v2f(.1, .1));
-    o_piece_sprite1.setScale(v2f(.1,.1));
-    o_piece_sprite2.setScale(v2f(.1,.1));
-    o_piece_sprite3.setScale(v2f(.1,.1));
-    o_piece_sprite4.setScale(v2f(.1,.1));
 
-    x_piece_sprite.setPosition(v2f(1000,1000));
-    x_piece_sprite1.setPosition(v2f(1000,1000));
-    x_piece_sprite2.setPosition(v2f(1000,1000));
-    x_piece_sprite3.setPosition(v2f(1000,1000));
-    x_piece_sprite4.setPosition(v2f(1000,1000));
+    //these can be in a for loop
+    x_piece_sprite->setScale(v2f(.1, .1));
+    x_piece_sprite1->setScale(v2f(.1,.1));
+    x_piece_sprite2->setScale(v2f(.1,.1));
+    x_piece_sprite3->setScale(v2f(.1,.1));
+    x_piece_sprite4->setScale(v2f(.1,.1));
+    o_piece_sprite->setScale(v2f(.5, .5));
+    o_piece_sprite1->setScale(v2f(.5,.5));
+    o_piece_sprite2->setScale(v2f(.5,.5));
+    o_piece_sprite3->setScale(v2f(.5,.5));
+    o_piece_sprite4->setScale(v2f(.5,.5));
 
-    o_piece_sprite.setPosition(v2f(1000,1000));
-    o_piece_sprite1.setPosition(v2f(1000,1000));
-    o_piece_sprite2.setPosition(v2f(1000,1000));
-    o_piece_sprite3.setPosition(v2f(1000,1000));
-    o_piece_sprite4.setPosition(v2f(1000,1000));
+    x_piece_sprite->setPosition(v2f(550,500));
+    x_piece_sprite1->setPosition(v2f(580,500));
+    x_piece_sprite2->setPosition(v2f(520,500));
+    x_piece_sprite3->setPosition(v2f(1000,1000));
+    x_piece_sprite4->setPosition(v2f(1000,1000));
+
+    o_piece_sprite->setPosition(v2f(1000,1000));
+    o_piece_sprite1->setPosition(v2f(1000,1000));
+    o_piece_sprite2->setPosition(v2f(1000,1000));
+    o_piece_sprite3->setPosition(v2f(1000,1000));
+    o_piece_sprite4->setPosition(v2f(1000,1000));
 
     v2i mouse_pos = sf::Mouse::getPosition(window);
     button_Maker top_left(v2f(100, 100),  7.5);
     button_Maker top_middle(v2f(100, 100), 7.5);
     button_Maker top_right(v2f(100, 100),  7.5);
-
-    top_left.rect.setPosition(v2f(310,160));
-    //top_left.circ_pos(top_left.rect,top_left.circ);
-    top_left.circ.setOrigin(v2f(top_left.circ.getRadius(),top_left.circ.getRadius()));
-    top_left.circ.setPosition(v2f(top_left.rect.getPosition().x + top_left.rect.getSize().x/2, top_left.rect.getPosition().y + top_left.rect.getSize().y/2));
-    top_left.set_button_style(sf::Color(192,192,192), 1, sf::Color::Black);
-
-    top_middle.rect.setPosition(v2f(415,160));
-    top_middle.circ.setOrigin(v2f(top_middle.circ.getRadius(),top_middle.circ.getRadius()));
-    top_middle.circ.setPosition(v2f(top_middle.rect.getPosition().x + top_middle.rect.getSize().x/2, top_middle.rect.getPosition().y + top_middle.rect.getSize().y/2));
-    top_middle.set_button_style(sf::Color(192,192,192), 1, sf::Color::White);
-
-    top_right.rect.setPosition(v2f(520,160));
-    top_right.circ.setOrigin(v2f(top_right.circ.getRadius(),top_right.circ.getRadius()));
-    top_right.circ.setPosition(v2f(top_right.rect.getPosition().x + top_right.rect.getSize().x/2, top_right.rect.getPosition().y + top_right.rect.getSize().y/2));
-    top_right.set_button_style(sf::Color(192,192,192), 1, sf::Color::Black);
-
-    bool picked_character = false;
-    bool players_turn = true;
-    int counter =0;
+    button_Maker mid_l(v2f(100,100), 7.5);
+    button_Maker mid_m(v2f(100,100), 7.5);
+    button_Maker mid_r(v2f(100,100), 7.5);
+    button_Maker bottom_l(v2f(100,100), 7.5);
+    button_Maker bottom_m(v2f(100,100), 7.5);
+    button_Maker bottom_r(v2f(100,100), 7.5);
 
     std::vector<button_Maker> button_list;
     button_list.push_back(top_left);
     button_list.push_back(top_middle);
     button_list.push_back(top_right);
+    button_list.push_back(mid_l);
+    button_list.push_back(mid_m);
+    button_list.push_back(mid_r);
+    button_list.push_back(bottom_l);
+    button_list.push_back(bottom_m);
+    button_list.push_back(bottom_r);
+
+    int posX = 310;
+    int posY = 160;
+    for(int button = 0; button < button_list.size(); button++)
+    {
+        button_list[button].rect.setPosition(v2f(posX, posY));
+        if((button + 1)%3 ==0)
+        {
+            posX = 310;
+            posY += 105;
+        }
+
+        else
+        {
+            posX += 105;
+        }
+        button_list[button].circ.setOrigin(v2f(button_list[button].circ.getRadius(), button_list[button].circ.getRadius()));
+        button_list[button].circ.setPosition(v2f(button_list[button].rect.getPosition().x + button_list[button].rect.getSize().x/2, button_list[button].rect.getPosition().y + button_list[button].rect.getSize().y/2));
+        button_list[button].set_button_style(sf::Color(192,192,192), 1, sf::Color::Black);
+
+    }
+
+
+    bool picked_character = false;
+    bool players_turn = true;
+    int counter =0;
+
 
     std::vector<sf::RectangleShape> button_list_rect;
     button_list_rect.push_back(top_left.rect);
     button_list_rect.push_back(top_middle.rect);
     button_list_rect.push_back(top_right.rect);
-    std::vector<std::reference_wrapper<sf::Sprite>> x_list;
+    std::vector<sf::Sprite*> x_list;
     x_list.emplace_back(x_piece_sprite);
     x_list.emplace_back(x_piece_sprite1);
     x_list.emplace_back(x_piece_sprite2);
     x_list.emplace_back(x_piece_sprite3);
     x_list.emplace_back(x_piece_sprite4);
 
-    std::vector<std::reference_wrapper<sf::Sprite>> o_list;
+    std::vector<sf::Sprite*> o_list;
     o_list.emplace_back(o_piece_sprite);
     o_list.emplace_back(o_piece_sprite1);
     o_list.emplace_back(o_piece_sprite2);
@@ -308,20 +331,29 @@ int main()
 
     while (window.isOpen())
     {
+       // printf("\n\n\nx: %f, y: %f", button_list_rect[1].get().getPosition().x, button_list_rect[1].get().getPosition().y);
+
         if (picked_character == false)
         {
             window.clear();
             window.draw(background_sprite.sprite);
-            for(int i = 0; i < x_list.size(); i++)
+
+            for(auto& button : button_list)
             {
-                window.draw(x_list[i]);
-                window.draw(o_list[i]);
+                button.bM_draw(window);
             }
 
-            top_left.bM_draw(window);
-            top_middle.bM_draw(window);
-            top_right.bM_draw(window);
-            window.draw(x_piece_sprite);
+            for(auto& sprite: x_list )
+            {
+                window.draw(*sprite);
+            }
+
+            for(auto& sprite: o_list )
+            {
+                window.draw(*sprite);
+            }
+
+
             window.display();
         }
 
@@ -329,7 +361,7 @@ int main()
         {
             window.clear();
             //window.draw(background_sprite.sprite);
-            window.draw(x_piece_sprite);
+           //window.draw(x_piece_sprite);
             window.display();
         }
         while (const std::optional event = window.pollEvent())
@@ -344,45 +376,28 @@ int main()
                 window.close();
             }
 
-//            if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
-//            {
-//                for(int position = 0; position < button_list_rect.size(); position++)
-//                {
-//                    if(button_list_rect[position].getGlobalBounds().contains(static_cast<v2f>(mouse_pos)) )
-//                    {
-//                        if(board[position] == 0)
-//                        {
-//                            board[position] = 1;
-//                            x_piece_sprite.setPosition(v2f(static_cast<float>(mouse_pos.x),static_cast<float>(mouse_pos.y)));
-//                            window.draw(x_piece_sprite);
-//                        }
-//                    }
-//                }
-//
-//            }
         }
 
             mouse_pos = sf::Mouse::getPosition(window);
 
+            if(players_turn == true)
+            {
 
-            top_left.mouse_on_button_circ_change(mouse_pos, sf::Color::White, 2.5, sf::Color::White,
-                                                 sf::Color::Transparent, 2.5, sf::Color::White);
-            top_left.bM_draw(window);
+                for (auto& buttons : button_list)
+                {
+                    buttons.mouse_on_button_circ_change(mouse_pos, sf::Color::White, 2.5, sf::Color::White,
+                                                        sf::Color::Transparent, 2.5, sf::Color::White);
+                }
 
-            top_middle.mouse_on_button_circ_change(mouse_pos, sf::Color::White, 2.5, sf::Color::White,
-                                                   sf::Color::Transparent, 2.5, sf::Color::White);
-            top_middle.bM_draw(window);
+                players_move(x_or_y::Y, x_list, o_list, board, players_turn, button_list, mouse_pos, button_list_rect, counter, window);
+            }
 
-            top_right.mouse_on_button_circ_change(mouse_pos, sf::Color::White, 2.5, sf::Color::White,
-                                                  sf::Color::Transparent, 2.5, sf::Color::White);
+            else
+            {
+                //enemy_move(players_turn);
+                players_turn = true;
+            }
 
-//            window.clear();
-//            for(auto i: button_list)
-//            {
-//                i.bM_draw(window);
-//            }
-            //window.display();
-            //inside the player function we need to have the  mouse_pos update
-            players_move(x_or_y::X, x_list, o_list, board, players_turn, button_list, mouse_pos,window, counter);
+
     }
 }
