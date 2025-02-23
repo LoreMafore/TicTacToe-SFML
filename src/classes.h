@@ -24,18 +24,14 @@ public:
         circ.setOutlineColor(sf::Color::Transparent);
     }
 
-    void circ_pos(const sf::RectangleShape& rectangle, sf::CircleShape circle)
-    {
-        circle.setOrigin(v2f(circle.getRadius(),circle.getRadius()));
-        circle.setPosition(v2f(rectangle.getPosition().x + rectangle.getSize().x/2, rectangle.getPosition().y + rectangle.getSize().y/2));
-    }
-
+    //function to draw to screen
     void bM_draw(sf::RenderTarget& target) const
     {
         target.draw(rect);
         target.draw(circ);
     }
 
+    //function that stylizes button
     void set_button_style(const sf::Color& color, f32 thickness, const sf::Color& outline_color)
     {
         rect.setFillColor(color);
@@ -43,6 +39,7 @@ public:
         rect.setOutlineColor(outline_color);
     }
 
+    //function - button changes color if on button
     int mouse_on_button_rect_change(const v2i mouse_pos, const sf::Color& color, f32 thickness, const sf::Color& outline_color,
                                     const sf::Color& OG_color, f32 OG_thickness, const sf::Color& OG_outline_color)
     {
@@ -64,6 +61,7 @@ public:
         return 0;
     }
 
+    //function - circ changes color if on button
     int mouse_on_button_circ_change(const v2i mouse_pos, const sf::Color& color, f32 thickness, const sf::Color& outline_color,
                                     const sf::Color& OG_color, f32 OG_thickness, const sf::Color& OG_outline_color)
     {
@@ -90,6 +88,7 @@ public:
         return 0;
     }
 
+    //returns if mouse is on button
     int mouse_On_Button(const v2i mos_pos)
     {
         return rect.getGlobalBounds().contains(static_cast<v2f>(mos_pos));
@@ -119,7 +118,7 @@ public:
 enum x_or_y
 {
     X,
-    Y,
+    O,
     SetUp
 };
 
