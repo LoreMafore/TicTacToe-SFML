@@ -3,11 +3,12 @@
 #include "classes.h"
 #include "algorithm"
 #include "random"
+#include <windows.h>
 
 
 
 ///TODO Start working on win cons
-int win_condition(int (&array)[9], x_or_y player, results& outcome) {
+int win_condition(int (&array)[9], x_or_y player, results& outcome, float& player_score, float& bot_score) {
     int filled = 0;
     int bot_array_piece = (player == x_or_y::X) ? 2 : 1;
     int player_array_piece = (player == x_or_y::X) ? 1 : 2;
@@ -38,12 +39,12 @@ int win_condition(int (&array)[9], x_or_y player, results& outcome) {
         }
 
         if (bot_count == 3) {
-            printf("\nPlayer loses.");
+            bot_count ++;
             outcome = LOSE;
             return 1;
         }
         if (player_count == 3) {
-            printf("\nPlayer wins!");
+            player_count ++;
             outcome = WIN;
             return 1;
         }
@@ -57,8 +58,9 @@ int win_condition(int (&array)[9], x_or_y player, results& outcome) {
     }
 
     if (filled == 9) {
-        printf("\nIt's a draw.");
         outcome = DRAW;
+        player_score += 0.5;
+        bot_score += 0.5;
         return 1;
     }
 
@@ -110,8 +112,7 @@ int bot_move(int (&array)[9], x_or_y player,const std::vector<sf::Sprite*>& x_sp
         if (count == 2 && empty_array != -1 || player_count == 2 && empty_array != -1) {
             int pos = win_pos[empty_array_pos.x][empty_array_pos.y];
             array[win_pos[empty_array_pos.x][empty_array_pos.y]] = bot_array_piece;
-            bot_piece[counter]->setPosition(
-                    v2f(buttons.at(pos).circ.getPosition().x - 15, buttons.at(pos).circ.getPosition().y - 15));
+            bot_piece[counter]->setPosition(v2f(buttons.at(pos).rect.getPosition().x, buttons.at(pos).rect.getPosition().y ));
             counter += 1;
             players_turn = true;
             return 1;
@@ -122,7 +123,7 @@ int bot_move(int (&array)[9], x_or_y player,const std::vector<sf::Sprite*>& x_sp
         if (array[4] == 0)
         {
             array[4] = bot_array_piece;
-            bot_piece[counter]->setPosition(v2f(buttons.at(4).circ.getPosition().x - 15, buttons.at(4).circ.getPosition().y - 15));
+            bot_piece[counter]->setPosition(v2f(buttons.at(4).rect.getPosition().x, buttons.at(4).rect.getPosition().y));
             counter += 1;
             players_turn = true;
             return 1;
@@ -134,7 +135,7 @@ int bot_move(int (&array)[9], x_or_y player,const std::vector<sf::Sprite*>& x_sp
     for (int pos : corners) {
         if (array[pos] == 0) {
             array[pos] = bot_array_piece;
-            bot_piece[counter]->setPosition(v2f(buttons[pos].circ.getPosition().x - 15, buttons[pos].circ.getPosition().y - 15));
+            bot_piece[counter]->setPosition(v2f(buttons[pos].rect.getPosition().x, buttons[pos].rect.getPosition().y));
             counter++;
             players_turn = true;
             return 1;
@@ -148,7 +149,7 @@ int bot_move(int (&array)[9], x_or_y player,const std::vector<sf::Sprite*>& x_sp
     for (int pos : edges) {
         if (array[pos] == 0) {
             array[pos] = bot_array_piece;
-            bot_piece[counter]->setPosition(v2f(buttons[pos].circ.getPosition().x - 15, buttons[pos].circ.getPosition().y - 15));
+            bot_piece[counter]->setPosition(v2f(buttons[pos].rect.getPosition().x, buttons[pos].rect.getPosition().y));
             counter++;
             players_turn = true;
             return 1;
@@ -179,7 +180,8 @@ bool players_move(x_or_y player, std::vector<sf::Sprite*> x_sprites, std::vector
                 printf("\narray[%d]: %d", i, array[i]);
                 //printf("\nbuttons_rect[%d]: %f , %F", i, button_rects[i].getPosition().x, button_rects[i].getPosition().y);
                 array[i] = chosen_array_piece;
-                chosen_piece[counter]->setPosition(v2f(buttons.at(i).circ.getPosition().x-15, buttons.at(i).circ.getPosition().y-15));
+                //chosen_piece[counter]->setPosition(v2f(buttons.at(i).circ.getPosition().x-15, buttons.at(i).circ.getPosition().y-15));
+                chosen_piece[counter]->setPosition(v2f(buttons.at(i).rect.getPosition().x, buttons.at(i).rect.getPosition().y));
                 //chosen_piece[counter]->setPosition(v2f(buttons.at(i).circ.getPosition().x, button_rects.at(i).getPosition().y));
 
                 counter += 1;
@@ -193,7 +195,7 @@ bool players_move(x_or_y player, std::vector<sf::Sprite*> x_sprites, std::vector
     return false;
 }
 
-int draw_square(int posX, int posY, std::vector<button_Maker> button_list)
+int draw_square(int posX, int posY, std::vector<button_Maker>& button_list)
 {
     for(int button = 0; button < button_list.size(); button++)
     {
@@ -216,13 +218,76 @@ int draw_square(int posX, int posY, std::vector<button_Maker> button_list)
     return 1;
 }
 
-int scene_starting_player(sf::RenderWindow& window, button_Maker& yes, button_Maker& no, bool picked_character)
+void scene_starting_player(sf::RenderWindow& window, button_Maker& yes, button_Maker& no, x_or_y& player,
+                          const std::vector<sf::Text>& text_list, const sprite_maker& background_sprite,
+                          bool& picked_character, bool& draw_once, bool& players_turn, v2i& mouse_pos)
 {
+    mouse_pos = sf::Mouse::getPosition(window);
+    if (draw_once == true)
+    {
+        yes.rect.setPosition(v2f(200,340));
+        no.rect.setPosition(v2f(520,340));
+        draw_once = false;
+    }
+
+    window.clear();
+    window.draw(background_sprite.sprite);
+    yes.bM_draw(window);
+    no.bM_draw(window);
+
+    yes.mouse_on_button_rect_change(mouse_pos, sf::Color(160,160,160), 3, sf::Color(192,192,192),
+                                    sf::Color(192,192,192), 3, sf::Color(160,160,160));
+    no.mouse_on_button_rect_change(mouse_pos, sf::Color(160,160,160), 3, sf::Color(192,192,192),
+                                   sf::Color(192,192,192), 3, sf::Color(160,160,160));
+
+    for(auto& i : text_list)
+    {
+        window.draw(i);
+    }
+
+    if(yes.mouse_On_Button(mouse_pos) && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && picked_character == false)
+    {
+        player = X;
+        picked_character = true;
+        yes.rect.setPosition(v2f(1000,1000));
+        no.rect.setPosition(v2f(1000,1000));
+        draw_once = true;
+    }
+
+    if(no.mouse_On_Button(mouse_pos) && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && picked_character == false)
+    {
+        player = Y;
+        picked_character = true;
+        players_turn = false;
+        yes.rect.setPosition(v2f(1000,1000));
+        no.rect.setPosition(v2f(1000,1000));
+        draw_once = true;
+    }
+
+    window.display();
+}
+
+void scene_gameOver()
+{
+
+}
+
+
+int words(sf::Text& txt, int size, const std::string& string ,sf::Color fill, int thick,sf::Color outer, v2f pos)
+{
+    txt.setCharacterSize(size);
+    txt.setString(string);
+    txt.setFillColor(fill);
+    txt.setOutlineThickness(thick);
+    txt.setOutlineColor(outer);
+    txt.setPosition(v2f(pos));
+
+    return 1;
 }
 
 int main()
 {
-    auto window = sf::RenderWindow(sf::VideoMode({920u, 580u}), "CMake SFML Project");
+    auto window = sf::RenderWindow(sf::VideoMode({940u, 580u}), "CMake SFML Project");
     window.setFramerateLimit(144);
 
     sf::Texture x_texture;
@@ -237,27 +302,14 @@ int main()
     sf::Text description_1_text(font);
     sf::Text description_2_text(font);
     sf::Text description_3_text(font);
+    sf::Text score_text(font);
 
-    sf::Clock mouse_clock;
-
-    title_text.setCharacterSize(50);
-    title_text.setString("Tic Tac Toe");
-    title_text.setFillColor(sf::Color(255,255,255));
-    title_text.setOutlineThickness(2);
-    title_text.setOutlineColor(sf::Color(96,96,96));
-    title_text.setPosition(v2f(245,50));
-
-    question_text.setCharacterSize(25);
-    question_text.setString("Would you like to do first?");
-    question_text.setFillColor(sf::Color(255,255,255));
-    question_text.setOutlineThickness(2);
-    question_text.setOutlineColor(sf::Color(96,96,96));
-    question_text.setPosition(v2f(210,250));
-
+    words(title_text,50,"Tic Tac Toe",sf::Color(255,255,255),2,sf::Color(96,96,96), v2f(245,50));
+    words(question_text,25,"Would you like to do first?",sf::Color(255,255,255),2,sf::Color(96,96,96),v2f(210,250));
 
     back_ground_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/background.png");
-    x_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/head.png");
-    o_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/bee.png");
+    x_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/X1.png");
+    o_texture.loadFromFile("C:/Users/momer/Umary/CSC204/MidTerm/assets/O1.png");
     sf::Sprite* x_piece_sprite = new sf::Sprite(x_texture);
     sf::Sprite* x_piece_sprite1 = new sf::Sprite(x_texture);
     sf::Sprite* x_piece_sprite2 = new sf::Sprite(x_texture);
@@ -270,32 +322,21 @@ int main()
     sf::Sprite* o_piece_sprite4 = new sf::Sprite(o_texture);
 
 
-
     sprite_maker background_sprite("C:/Users/momer/Umary/CSC204/MidTerm/assets/background.png", v2f(1,1),v2f(0,0));
 
-    //these can be in a for loop
-    x_piece_sprite->setScale(v2f(.1, .1));
-    x_piece_sprite1->setScale(v2f(.1,.1));
-    x_piece_sprite2->setScale(v2f(.1,.1));
-    x_piece_sprite3->setScale(v2f(.1,.1));
-    x_piece_sprite4->setScale(v2f(.1,.1));
-    o_piece_sprite->setScale(v2f(.5, .5));
-    o_piece_sprite1->setScale(v2f(.5,.5));
-    o_piece_sprite2->setScale(v2f(.5,.5));
-    o_piece_sprite3->setScale(v2f(.5,.5));
-    o_piece_sprite4->setScale(v2f(.5,.5));
+    std::vector<sf::Sprite*> x_list {x_piece_sprite, x_piece_sprite1,x_piece_sprite2,x_piece_sprite3,x_piece_sprite4};
+    std::vector<sf::Sprite*> o_list {o_piece_sprite, o_piece_sprite1, o_piece_sprite2, o_piece_sprite3, o_piece_sprite4};
+    for(auto &i : x_list)
+    {
+        //i->setScale(v2f(.1,.1));
+        i->setPosition(v2f(1000,1000));
+    }
+    for(auto &i : o_list)
+    {
+        //i->setScale(v2f(.5,.5));
+        i->setPosition(v2f(1000,1000));
+    }
 
-    x_piece_sprite->setPosition(v2f(550,500));
-    x_piece_sprite1->setPosition(v2f(580,500));
-    x_piece_sprite2->setPosition(v2f(520,500));
-    x_piece_sprite3->setPosition(v2f(1000,1000));
-    x_piece_sprite4->setPosition(v2f(1000,1000));
-
-    o_piece_sprite->setPosition(v2f(1000,1000));
-    o_piece_sprite1->setPosition(v2f(1000,1000));
-    o_piece_sprite2->setPosition(v2f(1000,1000));
-    o_piece_sprite3->setPosition(v2f(1000,1000));
-    o_piece_sprite4->setPosition(v2f(1000,1000));
 
     v2i mouse_pos = sf::Mouse::getPosition(window);
     button_Maker top_left(v2f(100, 100),  7.5);
@@ -311,83 +352,41 @@ int main()
     button_Maker yes(v2f(200, 100), 7.5);
     button_Maker no(v2f(200, 100), 7.5);
 
-    std::vector<button_Maker> button_list;
-    button_list.push_back(top_left);
-    button_list.push_back(top_middle);
-    button_list.push_back(top_right);
-    button_list.push_back(mid_l);
-    button_list.push_back(mid_m);
-    button_list.push_back(mid_r);
-    button_list.push_back(bottom_l);
-    button_list.push_back(bottom_m);
-    button_list.push_back(bottom_r);
+    std::vector<button_Maker> button_list {top_left, top_middle, top_right,
+                                           mid_l,    mid_m,      mid_r,
+                                           bottom_l, bottom_m,   bottom_r};
 
-    int posX = 310;
-    int posY = 160;
 
-    for(int button = 0; button < button_list.size(); button++)
-    {
-        button_list[button].rect.setPosition(v2f(posX, posY));
-        if((button + 1)%3 ==0)
-        {
-            posX = 310;
-            posY += 105;
-        }
-
-        else
-        {
-            posX += 105;
-        }
-        button_list[button].circ.setOrigin(v2f(button_list[button].circ.getRadius(), button_list[button].circ.getRadius()));
-        button_list[button].circ.setPosition(v2f(button_list[button].rect.getPosition().x + button_list[button].rect.getSize().x/2, button_list[button].rect.getPosition().y + button_list[button].rect.getSize().y/2));
-        button_list[button].set_button_style(sf::Color(192,192,192), 1, sf::Color::Black);
-
-    }
 
     yes.circ.setPosition(v2f(1000, 1000));
     yes.rect.setPosition(v2f(200, 340));
-    //this should include circ button style
     yes.set_button_style(sf::Color(192,192,192), 3, sf::Color(160,160,160));
-    yes_text.setCharacterSize(50);
-    yes_text.setString("Yes");
-    yes_text.setFillColor(sf::Color(255,255,255));
-    yes_text.setOutlineThickness(2);
-    yes_text.setOutlineColor(sf::Color(96,96,96));
-    yes_text.setPosition(v2f(yes.rect.getPosition().x + yes.rect.getSize().x/2 -65, yes.rect.getPosition().y + yes.rect.getSize().y/2 -30));
-    //yes_text.setPosition(v2f(0,0));
-
-
     no.circ.setPosition(v2f(1000,1000));
     no.rect.setPosition(v2f(520, 340));
-    //this should include circ button style
     no.set_button_style(sf::Color(192,192,192), 3, sf::Color(160,160,160));
-    no_text.setCharacterSize(50);
-    no_text.setString("No");
-    no_text.setFillColor(sf::Color(255,255,255));
-    no_text.setOutlineThickness(2);
-    no_text.setOutlineColor(sf::Color(96,96,96));
-    no_text.setPosition(v2f(no.rect.getPosition().x + no.rect.getSize().x/2 -40, no.rect.getPosition().y + no.rect.getSize().y/2 -30));
+
+    words(yes_text,50, "Yes",sf::Color(255,255,255),2,sf::Color(96,96,96),
+          v2f(yes.rect.getPosition().x + yes.rect.getSize().x/2 -65, yes.rect.getPosition().y + yes.rect.getSize().y/2 -30));
+
+    words(no_text,50,"No",sf::Color(255,255,255),2,sf::Color(96,96,96),
+          v2f(no.rect.getPosition().x + no.rect.getSize().x/2 -40, no.rect.getPosition().y + no.rect.getSize().y/2 -30));
+
+    std::vector<sf::Text> text_starting_player{yes_text, no_text, title_text, question_text};
 
     bool picked_character = false;
     bool players_turn = true;
-    bool can_click = true;
+    bool draw_once = true;
     int counter =0;
     int bot_counter =0;
+    int posX = 310;
+    int posY = 160;
+    float player_score = 0;
+    float bot_score = 0;
 
-
-    std::vector<sf::Sprite*> x_list;
-    x_list.emplace_back(x_piece_sprite);
-    x_list.emplace_back(x_piece_sprite1);
-    x_list.emplace_back(x_piece_sprite2);
-    x_list.emplace_back(x_piece_sprite3);
-    x_list.emplace_back(x_piece_sprite4);
-
-    std::vector<sf::Sprite*> o_list;
-    o_list.emplace_back(o_piece_sprite);
-    o_list.emplace_back(o_piece_sprite1);
-    o_list.emplace_back(o_piece_sprite2);
-    o_list.emplace_back(o_piece_sprite3);
-    o_list.emplace_back(o_piece_sprite4);
+    std::ostringstream stream;
+    stream << std::fixed << std::setprecision(1);
+    stream << "BOT: " << bot_score << "\n\nPlayer: " << player_score;
+    std::string score_text_paste = stream.str();
 
     int board[9] {0};
 
@@ -408,63 +407,29 @@ int main()
                 window.close();
             }
 
-            if(mouse_clock.getElapsedTime().asSeconds() >= 3)
-            {
-                can_click = true;
-            }
 
         }
         if (picked_character == false)
         {
 
-//            for(int button = 0; button < button_list.size(); button++)
-//            {
-//                button_list[button].rect.setPosition(v2f(1000, 1000));
-//            }
-            mouse_pos = sf::Mouse::getPosition(window);
-            yes.rect.setPosition(v2f(200, 340));
-            no.rect.setPosition(v2f(520, 340));
-            window.clear();
-            window.draw(background_sprite.sprite);
-            yes.bM_draw(window);
-            no.bM_draw(window);
-
-            yes.mouse_on_button_rect_change(mouse_pos, sf::Color(160,160,160), 3, sf::Color(192,192,192),
-                                                sf::Color(192,192,192), 3, sf::Color(160,160,160));
-            no.mouse_on_button_rect_change(mouse_pos, sf::Color(160,160,160), 3, sf::Color(192,192,192),
-                                            sf::Color(192,192,192), 3, sf::Color(160,160,160));
-
-            window.draw(yes_text);
-            window.draw(no_text);
-            window.draw(title_text);
-            window.draw(question_text);
-            if(yes.mouse_On_Button(mouse_pos) && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && picked_character == false)
-            {
-                
-
-                player = X;
-                picked_character = true;
-            }
-
-            if(no.mouse_On_Button(mouse_pos) && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && picked_character == false)
-            {
-                
-
-                player = Y;
-                picked_character = true;
-                players_turn = false;
-            }
-
-            window.display();
+            scene_starting_player(window,yes,no,player,text_starting_player,background_sprite,picked_character,draw_once,players_turn,mouse_pos);
 
         }
 
         if (picked_character == true && outcomes == IDK)
         {
+            if (draw_once == true)
+            {
+                Sleep(100);
+                draw_square(posX,posY, button_list);
+                draw_once = false;
+            }
+
             mouse_pos = sf::Mouse::getPosition(window);
             window.clear();
-            draw_square(posX,posY,button_list);
             window.draw(background_sprite.sprite);
+            words(score_text,25, "SCORE",sf::Color(255,255,255),2,sf::Color(96,96,96),v2f(85,225));
+            words(description_1_text,15, score_text_paste,sf::Color(255,255,255),2,sf::Color(96,96,96),v2f(55,275));
             for(auto& button : button_list)
             {
                 button.bM_draw(window);
@@ -481,6 +446,8 @@ int main()
             }
 
             window.draw(title_text);
+            window.draw(score_text);
+            window.draw(description_1_text);
 
 
             window.display();
@@ -501,18 +468,63 @@ int main()
                 bot_move(board,player,x_list,o_list,button_list, bot_counter,players_turn);
             }
 
-            win_condition(board, player, outcomes);
+            win_condition(board, player, outcomes, player_score, bot_score);
+
+            if(outcomes != IDK)
+            {
+//                int x = 1000;
+//                int y = 1000;
+//                draw_square(x,y,button_list);
+                draw_once = true;
+            }
 
         }
 
-        while (outcomes == WIN || outcomes == LOSE || outcomes == DRAW)
+        if (outcomes == WIN || outcomes == LOSE || outcomes == DRAW)
         {
+            if (draw_once == true)
+            {
+                stream << std::fixed << std::setprecision(1);
+                stream << "BOT: " << bot_score << "\n\nPlayer: " << player_score;
+                std::string score_text_paste = stream.str();
+                draw_once = false;
+            }
+
             mouse_pos = sf::Mouse::getPosition(window);
-            yes.rect.setPosition(v2f(200, 340));
-            no.rect.setPosition(v2f(520, 340));
-            question_text.setString("Would you like to play again?");
+            yes.rect.setPosition(v2f(675, 260));
+            no.rect.setPosition(v2f(800, 260));
+            yes.rect.setSize(v2f(100,50));
+            no.rect.setSize(v2f(100,50));
+
+            words(question_text,12,"Would you like to play again?",sf::Color(255,255,255),2,sf::Color(96,96,96),v2f(650,225));
+
+            words(yes_text,25, "Yes",sf::Color(255,255,255),2,sf::Color(96,96,96),
+                  v2f(yes.rect.getPosition().x + yes.rect.getSize().x/2 -65, yes.rect.getPosition().y + yes.rect.getSize().y/2 -30));
+
+            words(no_text,25,"No",sf::Color(255,255,255),2,sf::Color(96,96,96),
+                  v2f(no.rect.getPosition().x + no.rect.getSize().x/2 -40, no.rect.getPosition().y + no.rect.getSize().y/2 -30));
+
+            words(score_text,25, "SCORE",sf::Color(255,255,255),2,sf::Color(96,96,96),v2f(85,225));
+            words(description_1_text,15, score_text_paste,sf::Color(255,255,255),2,sf::Color(96,96,96),v2f(55,275));
+
             window.clear();
             window.draw(background_sprite.sprite);
+
+            for(auto& button : button_list)
+            {
+                button.bM_draw(window);
+            }
+
+            for(auto& sprite: x_list )
+            {
+                window.draw(*sprite);
+            }
+
+            for(auto& sprite: o_list )
+            {
+                window.draw(*sprite);
+            }
+
             yes.bM_draw(window);
             no.bM_draw(window);
 
@@ -525,6 +537,8 @@ int main()
             window.draw(no_text);
             window.draw(title_text);
             window.draw(question_text);
+            window.draw(score_text);
+            window.draw(description_1_text);
             if(yes.mouse_On_Button(mouse_pos) && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && picked_character == true)
             {
 
@@ -542,13 +556,6 @@ int main()
 
             window.display();
         }
-
-
-
-
-
-
-
 
     }
 }
